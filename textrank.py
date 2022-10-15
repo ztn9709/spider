@@ -1,6 +1,6 @@
-import spacy
 import pytextrank
 import requests
+import spacy
 
 url = "http://localhost:4000/api/paper"
 

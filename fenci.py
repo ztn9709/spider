@@ -1,11 +1,10 @@
-from nltk.tokenize import RegexpTokenizer
-from nltk.tokenize import MWETokenizer
-from nltk.corpus import stopwords
-from nltk import FreqDist
-from nltk.util import ngrams
-from nltk.stem.wordnet import WordNetLemmatizer
-import requests
 import nltk
+import requests
+from nltk import FreqDist
+from nltk.corpus import stopwords
+from nltk.stem.wordnet import WordNetLemmatizer
+from nltk.tokenize import MWETokenizer, RegexpTokenizer
+from nltk.util import ngrams
 
 url = "http://localhost:4000/api/paper"
 tokens_bigram = []
