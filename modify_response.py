@@ -35,9 +35,7 @@ def response(flow):
             "$cdc_asdjflasutopfhvcZLmcfl_",
         ]:
             ctx.log.info('Remove "{}" from {}.'.format(webdriver_key, flow.request.url))
-            flow.response.text = flow.response.text.replace(
-                '"{}"'.format(webdriver_key), '"NO-SUCH-ATTR"'
-            )
+            flow.response.text = flow.response.text.replace('"{}"'.format(webdriver_key), '"NO-SUCH-ATTR"')
             print(webdriver_key)
         flow.response.text = flow.response.text.replace("t.webdriver", "false")
         flow.response.text = flow.response.text.replace("ChromeDriver", "")
