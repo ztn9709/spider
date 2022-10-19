@@ -1,13 +1,14 @@
 import pickle
 import re
 import string
+import tempfile
 from time import time
 
 import numpy as np
 import pandas as pd
 import requests
 import spacy
-from gensim.models import Word2Vec
+from gensim.models import KeyedVectors, Word2Vec
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 
@@ -16,7 +17,7 @@ from sklearn.model_selection import train_test_split
 
 # 获取训练数据
 url = "http://localhost:4000/api/paper"
-papers = requests.get(url).json()[:15000]
+papers = requests.get(url).json()
 corpus = []
 label = []
 for data in papers:
@@ -69,23 +70,24 @@ def has_symbol(token):
 
 t0 = time()
 print("开始TFIDF模型")
-TfidfVec = TfidfVectorizer(tokenizer=spacy_tokenizer, ngram_range=(1, 1), decode_error="replace", max_df=0.8, min_df=3)
+TfidfVec = TfidfVectorizer(tokenizer=spacy_tokenizer, min_df=5)
 TfidfVec.fit(corpus)
 vocs = TfidfVec.get_feature_names_out()
 print(len(vocs))
 print("结束TFIDF模型，总计用时：", time() - t0)
-pickle.dump(TfidfVec, open("model/Tfidf_model_min3_2.pkl", "wb"))
+pickle.dump(TfidfVec, open("model/Tfidf_model_min5.pkl", "wb"))
 t0 = time()
 print("开始w2v模型")
 raw_tokens = [spacy_tokenizer(sample) for sample in corpus]
-model = Word2Vec(raw_tokens, min_count=3, vector_size=500, workers=4)
-model.wv.save("model/word2vec_15000_2.wv")
+model = Word2Vec(raw_tokens, min_count=4, vector_size=500, workers=4, sg=1, hs=1)
+model.wv.save("model/word2vec_sg_500.wv")
 print(len(model.wv.index_to_key))
 print("结束w2v模型，总计用时：", time() - t0)
-# with tempfile.NamedTemporaryFile(prefix="gensim-model-",dir="", delete=False) as tmp:
+# with tempfile.NamedTemporaryFile(prefix="gensim-model-", dir="D:\database\python\spider\model", delete=False) as tmp:
 #     temporary_filepath = tmp.name
 #     model.save(temporary_filepath)
 
-# Tfidf_model = pickle.load(open("model/Tfidf_model.pkl", "rb"))
+# Tfidf_model = pickle.load(open("model/Tfidf_model_min3.pkl", "rb"))
 # vocs = Tfidf_model.get_feature_names_out()
-# print(len(vocs), vocs[:100])
+# wv = KeyedVectors.load("model/word2vec_sg.wv")
+# print(set(vocs) - set(wv.index_to_key))
