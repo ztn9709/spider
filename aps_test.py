@@ -12,7 +12,7 @@ from selenium.webdriver.chrome.service import Service
 mgz_list = ["prb", "prl", "pra", "prresearch", " rmp"]
 mgz = "prb"
 host = "https://journals.aps.org/"
-page_range = range(563, 760)
+page_range = range(605, 760)
 
 
 chrome_path = "C:\\ProgramData\\Anaconda3\\chromedriver.exe"
