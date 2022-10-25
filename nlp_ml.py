@@ -12,6 +12,7 @@ import pandas as pd
 import requests
 import spacy
 from gensim.models import KeyedVectors, Word2Vec
+from scipy import spatial
 from sklearn import metrics
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
@@ -113,28 +114,40 @@ X_train_w2v = np.array(
 X_test_w2v = np.array(
     [np.mean([model.wv.get_vector(w) for w in spacy_tokenizer(text) if w in model.wv], axis=0) for text in X_test]
 )
-# 降维可视化展示
-fig = plt.figure(figsize=(12, 12))
-plot_LSA(X_train_w2v, y_train)
+corpus_w2v = np.array(
+    [np.mean([model.wv.get_vector(w) for w in spacy_tokenizer(text) if w in model.wv], axis=0) for text in corpus]
+)
+target_text = "Effect of magnetic impurity scattering on transport in topological insulators. Charge transport in topological insulators is primarily characterized by so-called topologically projected helical edge states, where charge carriers are correlated in spin and momentum. In principle, dissipationless current can be carried by these edge states as backscattering from impurities and defects is suppressed as long as time-reversal symmetry is not broken. However, applied magnetic fields or underlying nuclear spin defects in the substrate can break this time-reversal symmetry. In particular, magnetic impurities lead to backscattering by spin-flip processes. We have investigated the effects of pointwise magnetic impurities on the transport properties of helical edge states in the Bernevig, Hughes, and Zhang model using the nonequilibrium Green's function formalism and compared the results to a semianalytic approach. Using these techniques we study the influence of impurity strength and spin impurity polarization. We observe a secondary effect of defect-defect interaction that depends on the underlying material parameters which introduces a nonmonotonic response of the conductance to defect density. This in turn suggests a qualitative difference in magnetotransport signatures in the dilute and high-density spin impurity limits."
+target_w2v = np.mean([model.wv.get_vector(w) for w in spacy_tokenizer(target_text) if w in model.wv], axis=0)
+result = {}
+for i, doc_w2v in enumerate(corpus_w2v):
+    sim = 1 - spatial.distance.cosine(doc_w2v, target_w2v)
+    result[papers[i]["title"]] = sim
+list = sorted(result.items(), key=lambda x: x[1], reverse=True)
+print(list[:10])
+
+# # 降维可视化展示
+# fig = plt.figure(figsize=(12, 12))
+# plot_LSA(X_train_w2v, y_train)
 
 
-t0 = time()
-print("开始LR模型")
-# classifier = MultinomialNB()
-classifier = LogisticRegression()
-classifier.fit(X_train_w2v, y_train)
-predicted = classifier.predict(X_test_w2v)
-# with open("model/logistic.pkl", "rb") as f:
-#     classifier = pickle.load(f)
-# with open("model/logistic.pkl", "wb") as f:
-#     pickle.dump(classifier, f)
+# t0 = time()
+# print("开始LR模型")
+# # classifier = MultinomialNB()
+# classifier = LogisticRegression()
+# classifier.fit(X_train_w2v, y_train)
+# predicted = classifier.predict(X_test_w2v)
+# # with open("model/logistic.pkl", "rb") as f:
+# #     classifier = pickle.load(f)
+# # with open("model/logistic.pkl", "wb") as f:
+# #     pickle.dump(classifier, f)
 
-# 结果展示
-cnf_matrix = metrics.confusion_matrix(y_test, predicted)
-plt.figure()
-plot_confusion_matrix(cnf_matrix, classes=[0, 1])
-plt.show()
-print("Accuracy:", metrics.accuracy_score(y_test, predicted))
-print("Precision:", metrics.precision_score(y_test, predicted))
-print("Recall:", metrics.recall_score(y_test, predicted))
-print("结束，总计用时：", time() - t0)
+# # 结果展示
+# cnf_matrix = metrics.confusion_matrix(y_test, predicted)
+# plt.figure()
+# plot_confusion_matrix(cnf_matrix, classes=[0, 1])
+# plt.show()
+# print("Accuracy:", metrics.accuracy_score(y_test, predicted))
+# print("Precision:", metrics.precision_score(y_test, predicted))
+# print("Recall:", metrics.recall_score(y_test, predicted))
+# print("结束，总计用时：", time() - t0)
