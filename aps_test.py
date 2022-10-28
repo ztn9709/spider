@@ -11,8 +11,9 @@ from selenium.webdriver.chrome.service import Service
 
 mgz_list = ["prb", "prl", "pra", "prresearch", " rmp"]
 mgz = "prb"
+api = "http://localhost:4000/api/paper"
 host = "https://journals.aps.org/"
-page_range = range(605, 760)
+page_range = range(637, 760)
 
 
 chrome_path = "C:\\ProgramData\\Anaconda3\\chromedriver.exe"
@@ -23,7 +24,9 @@ options.add_argument("--disable-gpu")
 options.add_argument("--disable-blink-features=AutomationControlled")
 options.add_argument("--ignore-ssl-errors")
 options.add_argument("--ignore-certificate-errors")
-options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
+options.add_experimental_option(
+    "excludeSwitches", ["enable-automation", "enable-logging"]
+)
 UA = "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"
 options.add_argument(UA)
 
@@ -42,6 +45,12 @@ def get_paper_link(url):
     soup = BeautifulSoup(driver.page_source, "lxml")
     paper_links = []
     for result in soup.select(".article.panel.article-result"):
+        res = requests.get(
+            api + "/search", params={"text": result.attrs["data-id"]}
+        ).json()[0]["total"]
+        if len(res) != 0:
+            print(result.attrs["data-id"] + " 已存在")
+            continue
         link = host + mgz + "/abstract/" + result.attrs["data-id"]
         paper_links.append(link)
     driver.close()
@@ -78,7 +87,9 @@ def get_details(url):
     data["DOI"] = soup.select(".doi-field")[0].text
     if soup.select(".abstract .content p"):
         data["abstract"] = soup.select(".abstract .content p")[0].text
-    data["date"] = soup.find(attrs={"property": "article:published_time"}).attrs["content"]
+    data["date"] = soup.find(attrs={"property": "article:published_time"}).attrs[
+        "content"
+    ]
     data["publication"] = soup.select("h2")[0].text
     if soup.select(".physh-concepts"):
         for area in soup.select(".physh-concepts")[0].select(".physh-concept"):
@@ -103,12 +114,6 @@ def is_topo(data):
     return 0
 
 
-def save2mongodb(data):
-    url = "http://localhost:4000/api/paper"
-    r = requests.post(url, data=data)
-    return r.status_code
-
-
 if __name__ == "__main__":
     # for mgz in mgz_list:
     for i in page_range:
@@ -118,13 +123,16 @@ if __name__ == "__main__":
             start_time = datetime.now()
             data = get_details(link)
             end_time = datetime.now()
-            status_code = save2mongodb(data)
-            if status_code == 200:
+            res = requests.post(api, data=data)
+            if res.status_code == 200:
                 success = 1
             else:
-                success = 2
-                print("已存在")
-            print("链接：{}，第{}页，状态码：{}，用时：{}s".format(data["DOI"], i, success, end_time - start_time))
+                success = 0
+            print(
+                "链接：{}，第{}页，状态码：{}，用时：{}s".format(
+                    data["DOI"], i, success, end_time - start_time
+                )
+            )
             random_sleep(1, 0.5)
         print("next page")
         random_sleep(30, 5)
