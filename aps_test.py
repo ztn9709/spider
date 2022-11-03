@@ -13,7 +13,7 @@ mgz_list = ["prb", "prl", "pra", "prresearch", " rmp"]
 mgz = "prb"
 api = "http://localhost:4000/api/paper"
 host = "https://journals.aps.org/"
-page_range = range(637, 760)
+page_range = range(661, 760)
 
 
 chrome_path = "C:\\ProgramData\\Anaconda3\\chromedriver.exe"
@@ -46,7 +46,7 @@ def get_paper_link(url):
     paper_links = []
     for result in soup.select(".article.panel.article-result"):
         res = requests.get(
-            api + "/search", params={"text": result.attrs["data-id"]}
+            api + "/search", params={"DOI": result.attrs["data-id"]}
         ).json()[0]["total"]
         if len(res) != 0:
             print(result.attrs["data-id"] + " 已存在")
@@ -84,7 +84,7 @@ def get_details(url):
     if soup.select(".authors .content ul"):
         for institute in soup.select(".authors .content ul")[0].select("li"):
             data["institutes"].append(re.sub(r"^\d", "", institute.text))
-    data["DOI"] = soup.select(".doi-field")[0].text
+    data["DOI"] = soup.select(".doi-field")[0].text.replace("https://doi.org/", "")
     if soup.select(".abstract .content p"):
         data["abstract"] = soup.select(".abstract .content p")[0].text
     data["date"] = soup.find(attrs={"property": "article:published_time"}).attrs[
@@ -135,4 +135,6 @@ if __name__ == "__main__":
             )
             random_sleep(1, 0.5)
         print("next page")
+        if i % 20 == 0:
+            random_sleep(900, 10)
         random_sleep(30, 5)
