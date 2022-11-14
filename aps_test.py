@@ -10,10 +10,10 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 
 mgz_list = ["prb", "prl", "pra", "prresearch", " rmp"]
-mgz = "prb"
+mgz = "prl"
 api = "http://localhost:4000/api/paper"
 host = "https://journals.aps.org/"
-page_range = range(661, 760)
+page_range = range(53, 400)
 
 
 chrome_path = "C:\\ProgramData\\Anaconda3\\chromedriver.exe"
@@ -135,6 +135,6 @@ if __name__ == "__main__":
             )
             random_sleep(1, 0.5)
         print("next page")
-        if i % 20 == 0:
+        if i % 10 == 0:
             random_sleep(900, 10)
         random_sleep(30, 5)
